@@ -1,4 +1,4 @@
-# This file describe how to setup my cluster (Tested on k3s single node cluster)
+## This file describe how to setup kubernetes cluster (Tested on k3s single node)
 Version: 1
 ## 1. Prepare Cluster Issuer for letsencrypt ssl certificate
 
