@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  selector:
+    matchLabels:
+      app: mysql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "@Pass123@Pass"
+        - name: MYSQL_ALLOW_EMPTY_PASSWORD
+          value: "no"
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+      - name: mysql-config
+        configMap:
+          name: mysql-config
+          items:
+          - key: my.cnf
+            path: my.cnf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+    nodePort: 30306
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: mysql
+data:
+  my.cnf: |
+    [mysqld]
+    sql_mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    innodb_file_per_table=1
+    max_connections=200
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
+    skip-name-resolve
+

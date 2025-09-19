@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: phpmyadmin-ingress
+  namespace: mysql
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"   # if using cert-manager
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: phpmyadmin.web.himelrana.eu.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: phpmyadmin
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - phpmyadmin.web.himelrana.eu.org
+    secretName: phpmyadmin-tls
