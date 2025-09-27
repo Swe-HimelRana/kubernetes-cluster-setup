@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-commander
+  namespace: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-commander
+  template:
+    metadata:
+      labels:
+        app: redis-commander
+    spec:
+      containers:
+      - name: redis-commander
+        image: rediscommander/redis-commander:latest
+        env:
+        - name: HTTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: redis-commander-auth
+              key: username
+        - name: HTTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-commander-auth
+              key: password
+        ports:
+        - containerPort: 8081
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      volumes:
+      - name: config
+        configMap:
+          name: redis-commander-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-commander
+  namespace: redis
+spec:
+  selector:
+    app: redis-commander
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8081

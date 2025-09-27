@@ -1,0 +1,27 @@
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kitedash-ingress
+  namespace: kube-system
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: kitedash.web.himelrana.eu.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kite
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - kitedash.web.himelrana.eu.org
+    secretName: kite-tls
+```

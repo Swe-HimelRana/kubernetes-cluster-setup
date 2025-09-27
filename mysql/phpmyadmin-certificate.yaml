@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: phpmyadmin-tls # This is the name of the certificate
+  namespace: mysql # This is the namespace of the certificate
+spec:
+  secretName: phpmyadmin-tls # This is the name of the certificate
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod # This is the cluster issuer of the certificate
+  dnsNames:
+    - phpmyadmin.web.himelrana.eu.org # This is the dns name of the certificate
+
+

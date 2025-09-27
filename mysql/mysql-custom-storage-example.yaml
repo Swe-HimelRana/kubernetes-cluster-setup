@@ -1,0 +1,41 @@
+# Example: MySQL StatefulSet with custom storage at /mnt/storage1
+# 
+# To use this configuration:
+# 1. Create the directory: sudo mkdir -p /mnt/storage1
+# 2. Set permissions: sudo chown -R 999:999 /mnt/storage1  # MySQL user UID
+# 3. Uncomment the StorageClass section in mysql-statefulset.yaml
+# 4. Change storageClassName from 'local-path' to 'mysql-storage'
+# 5. Apply: kubectl apply -f mysql-statefulset.yaml
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: mysql-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+parameters:
+  type: hostPath
+  path: /mnt/storage1
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-custom-pv
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: mysql-storage
+  hostPath:
+    path: /mnt/storage1/mysql
+    type: DirectoryOrCreate
+
+# Usage instructions:
+# 1. Apply this StorageClass: kubectl apply -f mysql-custom-storage-example.yaml
+# 2. Edit mysql-statefulset.yaml: change storageClassName to 'mysql-storage'
+# 3. Apply the updated StatefulSet: kubectl apply -f mysql-statefulset.yaml

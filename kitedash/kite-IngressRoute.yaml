@@ -1,0 +1,54 @@
+# Kite Dashboard IngressRoute
+# ---------------------------------------------------------
+#  if you want to use this ingressRoute with oauth2 protection. You must apply middware first
+#  kubectl apply -f ./kitedash/kite-oauth-middleware.yaml
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kitedash-ingress-route
+  namespace: kube-system
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`kitedash.web.himelrana.eu.org`)
+      kind: Rule
+      services:
+        - name: kite
+          port: 80
+      middlewares:
+        - name: github-auth-middleware
+          namespace: kube-system
+  tls:
+    secretName: kite-tls
+
+
+# Default kubernetes default ingress without oauth2 protection
+# ---------------------------------------------------------
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: kitedash-ingress
+#   namespace: kube-system
+#   annotations:
+#     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+# spec:
+#   ingressClassName: traefik
+#   rules:
+#   - host: kitedash.web.himelrana.eu.org
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: kite
+#             port:
+#               number: 80
+#   tls:
+#   - hosts:
+#     - kitedash.web.himelrana.eu.org
+#     secretName: kite-tls

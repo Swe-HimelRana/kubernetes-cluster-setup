@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-forward-auth # This is the name of the forward auth service
+  namespace: forward-auth # This is the namespace of the forward auth service
+spec:
+  replicas: 1 # This is the number of replicas of the forward auth service
+  selector:
+    matchLabels:
+      app: github-forward-auth # This is the label of the forward auth service
+  template:
+    metadata:
+      labels:
+        app: github-forward-auth # This is the label of the forward auth service
+    spec:
+      containers:
+        - name: github-forward-auth # This is the name of the container
+          image: ghcr.io/swe-himelrana/forwardauth:x64 # This is the image of the forward auth service
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4181 # This is the port of the forward auth service
+          env:
+            - name: PROVIDER
+              value: "github"
+            - name: GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: github-client-id # This is the key of the github client id
+            - name: GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: github-client-secret # This is the key of the github client secret
+            - name: OAUTH_SCOPES
+              value: "read:user,user:email" # This is the scopes of the forward auth service
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: secret # This is the key of the secret
+            - name: COOKIE_DOMAIN # This is the name of the cookie domain
+              valueFrom:
+                secretKeyRef:
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: cookie-domain # This is the key of the cookie domain
+            - name: INSECURE_COOKIE # This is the name of the insecure cookie
+              valueFrom:
+                secretKeyRef:
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: insecure-cookie # This is the key of the insecure cookie
+            - name: AUTH_HOST # This is the name of the auth host
+              valueFrom:
+                secretKeyRef: # This is the secret key reference of the forward auth service
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: auth-host # This is the key of the auth host
+            - name: URL_PATH # This is the name of the url path
+              value: "/_oauth" # This is the path of the forward auth service
+            - name: WHITELIST # This is the name of the whitelist
+              valueFrom:
+                secretKeyRef:
+                  name: github-forward-auth-secret # This is the secret of the forward auth service
+                  key: whitelist_users # This is the key of the whitelist users
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: github-forward-auth-service # This is the name of the forward auth service
+  namespace: forward-auth
+spec:
+  selector:
+    app: github-forward-auth # This is the selector of the forward auth service
+  ports:
+    - port: 4181 # This is the port of the forward auth service
+      targetPort: 4181 # This is the target port of the forward auth service
+

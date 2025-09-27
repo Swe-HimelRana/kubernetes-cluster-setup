@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: mongo-express-tls
+  namespace: mongodb
+spec:
+  secretName: mongo-express-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - express.web.himelrana.eu.org
+
+

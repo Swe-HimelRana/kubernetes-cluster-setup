@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  serviceName: mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
+        - name: MYSQL_ALLOW_EMPTY_PASSWORD
+          value: "no"
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d
+      volumes:
+      - name: mysql-config
+        configMap:
+          name: mysql-config
+          items:
+          - key: my.cnf
+            path: my.cnf
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      # Option 1: Use k3s default storage (current)
+      storageClassName: local-path  # Default k3s storage at /var/lib/rancher/k3s/storage/
+      
+      # Option 2: Use custom hostPath storage at /mnt/storage1
+      # storageClassName: mysql-storage  # Uncomment and create StorageClass below
+      
+      # Option 3: Use specific node storage (if you have dedicated storage nodes)
+      # storageClassName: fast-ssd  # For SSD storage
+      
+      resources:
+        requests:
+          storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+    nodePort: 30306
+  type: NodePort
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: mysql
+data:
+  my.cnf: |
+    [mysqld]
+    sql_mode=STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO
+    innodb_file_per_table=1
+    max_connections=200
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_general_ci
+    bind-address=0.0.0.0
+    skip-name-resolve
+
+# Custom StorageClass for /mnt/storage1 directory
+# Uncomment this section if you want to use /mnt/storage1 for MySQL data
+# ---
+# apiVersion: storage.k8s.io/v1
+# kind: StorageClass
+# metadata:
+#   name: mysql-storage
+# provisioner: kubernetes.io/no-provisioner
+# volumeBindingMode: WaitForFirstConsumer
+# reclaimPolicy: Delete
+# parameters:
+#   type: hostPath
+#   path: /mnt/storage1

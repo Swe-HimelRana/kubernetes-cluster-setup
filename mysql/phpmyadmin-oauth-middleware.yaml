@@ -1,0 +1,12 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: github-forward-auth-middleware  # This is the name of the middleware
+  namespace: mysql # This is the namespace of the middleware
+spec:
+  forwardAuth:
+    address: http://github-forward-auth-service.forward-auth.svc.cluster.local:4181/verify # This is the address of the forward auth service
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-Forwarded-User # This is the auth response header
+      - X-Forwarded-Email # This is the auth response header

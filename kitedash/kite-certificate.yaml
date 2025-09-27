@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kite-tls
+  namespace: kube-system
+spec:
+  secretName: kite-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-prod
+  dnsNames:
+    - kitedash.web.himelrana.eu.org
+
+

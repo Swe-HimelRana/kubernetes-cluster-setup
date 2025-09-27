@@ -1,0 +1,20 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: redis-commander-ingress-route
+  namespace: redis
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`redis-commander.web.himelrana.eu.org`)
+      kind: Rule
+      services:
+        - name: redis-commander
+          port: 80
+      middlewares:
+        - name: github-auth-middleware
+          namespace: redis
+  tls:
+    secretName: redis-commander-tls
